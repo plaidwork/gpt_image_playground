@@ -154,22 +154,22 @@ export default function Header() {
                 <>
                   <span className="min-w-0 truncate text-[17px] font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:hidden" title={favoriteCollectionTitle}>{favoriteCollectionTitle}</span>
                   <a
-                    href="https://github.com/CookSleep/gpt_image_playground"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hidden text-lg font-bold tracking-tight text-gray-800 transition-colors hover:text-gray-600 dark:text-gray-100 dark:hover:text-gray-300 sm:inline"
                   >
-                    GPT Image Playground
+                    🎨 GPT Image
                   </a>
                 </>
               ) : (
                 <a
-                  href="https://github.com/CookSleep/gpt_image_playground"
+                  href="#"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[17px] sm:text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
-                  GPT Image Playground
+                  🎨 GPT Image
                 </a>
               )}
               {hasUpdate && latestRelease && (
@@ -252,6 +252,49 @@ export default function Header() {
             </button>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {[
+              {
+                title: '提示词图库',
+                href: 'https://prompt.doingfb.com',
+                icon: 'https://prompt.doingfb.com/icons/Favicon.png',
+              },
+              {
+                title: '可视化案例库',
+                href: 'https://awesome.gptimage2.asia',
+                icon: 'https://favicon.im/awesome.gptimage2.asia',
+              },
+              {
+                title: '图像优化',
+                href: 'https://zh.recompressor.com',
+                icon: 'https://favicon.im/zh.recompressor.com',
+              },
+              {
+                title: 'AI图片溯源',
+                href: 'https://aigctrace.com',
+                icon: 'https://aigctrace.com/apple-touch-icon.png',
+              },
+              {
+                title: '移除AI水印',
+                href: 'https://raiw.cc/zh/',
+                icon: 'https://favicon.im/raiw.cc',
+              },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={item.title}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors flex items-center justify-center shrink-0"
+              >
+                <img
+                  src={item.icon}
+                  alt={item.title}
+                  className="w-5 h-5 rounded-sm object-contain"
+                />
+              </a>
+            ))}
+
             {!isPwaInstalled && (
               <div
                 className="relative"
