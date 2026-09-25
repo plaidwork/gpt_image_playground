@@ -5,6 +5,7 @@ import { customProviderSupportsNativeTransparentBackground } from '../lib/custom
 import { hasActiveDataOperations } from '../lib/dataOperations'
 import { isApiProxyAvailable, isApiProxyLocked, readClientDevProxyConfig } from '../lib/devProxy'
 import { useStore, exportData, importData, clearData, type SettingsTab } from '../store'
+import { PRESET_IMAGE_MODELS } from '../lib/imageModels'
 import {
   createDefaultOpenAIProfile,
   DEFAULT_FAL_BASE_URL,
@@ -1563,39 +1564,78 @@ export default function SettingsModal() {
                 </div>
               )}
 
-              {/* 7. 模型 ID（紧跟接口选择） */}
-              <label className="block">
-                <span className="mb-1.5 block text-sm text-gray-600 dark:text-gray-300">
-                  模型 ID
-                </span>
-                <input
-                  value={activeProfile.model}
-                  onChange={(e) => updateActiveProfile({ model: e.target.value })}
-                  onBlur={(e) => commitActiveProfilePatch({ model: e.target.value })}
-                  type="text"
-                  disabled={activeProfileLocked}
-                  placeholder={activeProfile.provider === 'fal' ? DEFAULT_FAL_MODEL : getDefaultModelForMode(activeProfile.apiMode ?? DEFAULT_SETTINGS.apiMode)}
-                  className="w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
-                />
-                  <div data-selectable-text className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
-                  {activeProfile.provider === 'fal' ? (
-                    <>
-                      当前支持：<code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">openai/gpt-image-2</code>{' '}
-                      <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">openai/gpt-image-2.5/sunburst</code>{' '}
-                      <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">openai/gpt-image-2.5/flare</code>。
-                    </>
-                  ) : activeCustomProvider ? (
-                    <>当前使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{activeCustomProvider.name}</code>。</>
-                  ) : (activeProfile.apiMode ?? DEFAULT_SETTINGS.apiMode) === 'responses' ? (
-                    <>Responses API 需要使用支持 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">image_generation</code> 工具的文本模型，例如 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_RESPONSES_MODEL}</code>。</>
-                  ) : (
-                    <>Images API 需要使用 GPT Image 模型，例如 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_IMAGES_MODEL}</code>。</>
-                  )}
-                  {activeProfile.provider === 'openai' && (
-                    <>支持通过查询参数覆盖：<code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">?model=</code>。</>
-                  )}
-                </div>
-              </label>
+              {/* 7. 模型 ID（支持手输 + 预设下拉快速选择 + 特性区别小字说明） */}
+<div className="block space-y-1.5">
+  <div className="flex items-center justify-between">
+    <span className="block text-sm text-gray-600 dark:text-gray-300">
+      模型 ID
+    </span>
+    {/* 选中推荐模型时右上角显示胶囊标签 */}
+    {(() => {
+      const match = PRESET_IMAGE_MODELS.find((m) => m.id === activeProfile.model)
+      return match ? (
+        <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+          {match.badge}
+        </span>
+      ) : null
+    })()}
+  </div>
+
+  {/* 输入框 + 快速选择下拉 */}
+  <div className="flex items-center gap-2">
+    {/* 1. 保留原本的手动自由输入框 */}
+    <input
+      value={activeProfile.model}
+      onChange={(e) => updateActiveProfile({ model: e.target.value })}
+      onBlur={(e) => commitActiveProfilePatch({ model: e.target.value })}
+      type="text"
+      disabled={activeProfileLocked}
+      placeholder={activeProfile.provider === 'fal' ? DEFAULT_FAL_MODEL : getDefaultModelForMode(activeProfile.apiMode ?? DEFAULT_SETTINGS.apiMode)}
+      className="flex-1 min-w-0 rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
+    />
+
+    {/* 2. 快速切换预设模型的下拉框 */}
+    <select
+      value={PRESET_IMAGE_MODELS.some((m) => m.id === activeProfile.model) ? activeProfile.model : ''}
+      onChange={(e) => {
+        if (e.target.value) {
+          updateActiveProfile({ model: e.target.value }, true)
+        }
+      }}
+      disabled={activeProfileLocked}
+      className="shrink-0 rounded-xl border border-gray-200/70 bg-white/80 px-2.5 py-2 text-xs text-gray-700 outline-none transition hover:bg-gray-50 focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-gray-200 dark:focus:border-blue-500/50 cursor-pointer"
+      title="选择常用推荐模型"
+    >
+      <option value="" disabled>
+        切换推荐 ▾
+      </option>
+      {PRESET_IMAGE_MODELS.map((item) => (
+        <option key={item.id} value={item.id}>
+          {item.name} ({item.badge})
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* 3. 动态展示区别说明小字 */}
+  <div data-selectable-text className="text-xs leading-relaxed text-gray-500 dark:text-gray-400 pt-0.5">
+    {(() => {
+      const match = PRESET_IMAGE_MODELS.find((m) => m.id === activeProfile.model)
+      if (match) {
+        return (
+          <p className="text-blue-600 dark:text-blue-400">
+            <span className="font-semibold">{match.name}</span> ({match.badge})：{match.desc}
+          </p>
+        )
+      }
+      return (
+        <p className="text-gray-500 dark:text-gray-400">
+          💡 <strong>三者区别说明</strong>：<strong>gpt-image-2</strong> (基础通用，性价比高) · <strong>2.5-flare</strong> (极速响应，动态光影强) · <strong>2.5-sunburst</strong> (旗舰品质，细节与提示词遵循极佳)。
+        </p>
+      )
+    })()}
+  </div>
+</div>
 
               {activeProfile.provider === 'openai' && activeProfile.apiMode === 'responses' && (
                 <label className="block">
