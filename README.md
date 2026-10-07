@@ -172,7 +172,7 @@ VITE_DEFAULT_API_URL=https://api.openai.com/v1
 
 **初始部署**
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCookSleep%2Fgpt_image_playground&project-name=gpt-image-playground&repository-name=gpt-image-playground)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fplaidwork%2Fgpt_image_playground&project-name=gpt-image-playground&repository-name=gpt-image-playground)
 
 点击上方按钮导入仓库即可，Vercel 会自动执行构建并部署静态文件。添加或修改环境变量后需要重新部署。
 
@@ -281,7 +281,7 @@ npm run deploy:cf
 ```bash
 docker run -d -p 8080:80 \
   -e DEFAULT_API_URL=https://api.openai.com/v1 \
-  ghcr.io/cooksleep/gpt_image_playground:latest
+  ghcr.io/plaidwork/gpt_image_playground:latest
 ```
 
 开启代理并隐藏真实地址：
@@ -292,7 +292,7 @@ docker run -d -p 8080:80 \
   -e API_PROXY_URL=https://real-api.example.com/v1 \
   -e ENABLE_API_PROXY=true \
   -e LOCK_API_PROXY=true \
-  ghcr.io/cooksleep/gpt_image_playground:latest
+  ghcr.io/plaidwork/gpt_image_playground:latest
 ```
 
 挂载本地配置文件：
@@ -301,7 +301,7 @@ docker run -d -p 8080:80 \
 docker run -d -p 8080:80 \
   -v ./gpt-image-config.json:/config/gpt-image-config.json:ro \
   -e DEFAULT_API_URL=/config/gpt-image-config.json \
-  ghcr.io/cooksleep/gpt_image_playground:latest
+  ghcr.io/plaidwork/gpt_image_playground:latest
 ```
 
 使用 host 网络加 `--network host`，修改端口用 `-e PORT=28080`。
@@ -311,7 +311,7 @@ docker run -d -p 8080:80 \
 ```yaml
 services:
   gpt-image-playground:
-    image: ghcr.io/cooksleep/gpt_image_playground:latest
+    image: ghcr.io/plaidwork/gpt_image_playground:latest
     environment:
       - DEFAULT_API_URL=https://api.openai.com/v1
     ports:
@@ -401,11 +401,11 @@ npm run build
 集成示例（New API 聊天系统）：
 
 ```text
-https://gpt-image-playground.cooksleep.dev?apiUrl={address}&apiKey={key}&model={model}
+https://gpt-image-playground.plaidwork.dev?apiUrl={address}&apiKey={key}&model={model}
 ```
 
 ```text
-https://cooksleep.github.io/gpt_image_playground?apiUrl={address}&apiKey={key}&model={model}
+https://plaidwork.github.io/gpt_image_playground?apiUrl={address}&apiKey={key}&model={model}
 ```
 
 <a id="preset-config-json"></a>
@@ -555,7 +555,7 @@ Docker 需要通过 volume 挂载宿主机文件到容器内路径：
 docker run -d -p 8080:80 \
   -v ./gpt-image-config.json:/config/gpt-image-config.json:ro \
   -e DEFAULT_API_URL=/config/gpt-image-config.json \
-  ghcr.io/cooksleep/gpt_image_playground:latest
+  ghcr.io/plaidwork/gpt_image_playground:latest
 ```
 
 > Docker 环境变量名为 `DEFAULT_API_URL`（不含 `VITE_` 前缀）。
