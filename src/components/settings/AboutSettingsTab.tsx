@@ -128,7 +128,7 @@ export default function AboutSettingsTab({ onOpenFontLicenses }: { onOpenFontLic
               rel="noopener noreferrer"
               className="rounded outline-none underline-offset-2 hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
-              🎨 Image Playground
+              🎨 AIGC Image Playground
             </a>
           </h4>
           <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400">
