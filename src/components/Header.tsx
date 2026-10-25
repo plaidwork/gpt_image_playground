@@ -190,7 +190,7 @@ export default function Header() {
                     rel="noopener noreferrer"
                     className="hidden text-lg font-bold tracking-tight text-gray-800 transition-colors hover:text-gray-600 dark:text-gray-100 dark:hover:text-gray-300 sm:inline"
                   >
-                    🎨 Image Playground
+                    🎨 AIGC Image Playground
                   </a>
                 </>
               ) : (
@@ -200,7 +200,7 @@ export default function Header() {
                   rel="noopener noreferrer"
                   className="text-[17px] sm:text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
-                  🎨 Image Playground
+                  🎨 AIGC Image Playground
                 </a>
               )}
               {/* 透明伪元素把点击区域扩大到 32px 以上，外观不变 */}
