@@ -2,7 +2,7 @@
 
 <img src="public/pwa-icon.svg" alt="GPT Image Playground" width="128" height="128">
 
-# GPT Image Playground
+# AIGC Image Playground
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/plaidwork/gpt_image_playground?style=flat-square&color=eab308)](https://github.com/plaidwork/gpt_image_playground/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/plaidwork/gpt_image_playground?style=flat-square&color=3b82f6)](https://github.com/plaidwork/gpt_image_playground/network/members)
