@@ -283,7 +283,7 @@ export default function TaskGrid() {
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="text-sm">输入提示词开始生成图片</p>
+            <p className="text-sm">输入提示词开始生成图片（内容由AI生成，仅供参考）</p>
             {isTauri && !tasks.length && (
               <p className="mt-3 text-xs">
                 从网页版迁移：在网页版的 <strong className="font-semibold">设置 → 数据管理</strong> 中导出备份，再
