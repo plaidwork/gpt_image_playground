@@ -123,30 +123,41 @@ export default function AboutSettingsTab({ onOpenFontLicenses }: { onOpenFontLic
         <div className="min-w-0 flex-1">
           <h4 className="text-base font-bold text-gray-800 dark:text-gray-100">
             <a
-              href="https://github.com/CookSleep/gpt_image_playground"
+              href="https://github.com/plaidwork/gpt_image_playground"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded outline-none underline-offset-2 hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
-              GPT Image Playground
+              🎨 AIGC Image Playground
             </a>
           </h4>
           <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400">
+            基于{' '}
             <a
-              href="https://github.com/CookSleep"
+              href="https://github.com/CookSleep/gpt_image_playground"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded outline-none underline-offset-2 transition-colors hover:text-gray-700 hover:underline focus-visible:text-gray-700 focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:hover:text-gray-200 dark:focus-visible:text-gray-200"
             >
               @CookSleep
-            </a>
+            </a>{' '}
+            构建，由{' '}
+            <a
+              href="https://github.com/plaidwork/gpt_image_playground"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded outline-none underline-offset-2 font-medium transition-colors hover:text-gray-700 hover:underline focus-visible:text-gray-700 focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:hover:text-gray-200 dark:focus-visible:text-gray-200"
+            >
+              @plaidwork
+            </a>{' '}
+            深度定制
           </p>
           <p data-selectable-text className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
             本项目的成长离不开每一位用户的使用、反馈、贡献与支持，感谢一路有你。
           </p>
         </div>
         <a
-          href="https://github.com/CookSleep/gpt_image_playground"
+          href="https://github.com/plaidwork/gpt_image_playground"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub 仓库"
@@ -156,7 +167,6 @@ export default function AboutSettingsTab({ onOpenFontLicenses }: { onOpenFontLic
           <GithubIcon className="h-6 w-6" />
         </a>
       </div>
-
       <AboutCard icon={<RefreshIcon className="h-4 w-4" />} title="版本与更新">
         {hasUpdate && !checking ? (
           <AboutRow
