@@ -14,7 +14,7 @@
       {
         "label": "main",
         "create": false,
-        "title": "GPT Image Playground",
+        "title": "AIGC Image",
         "width": 1280,
         "height": 820,
         "minWidth": 800,
