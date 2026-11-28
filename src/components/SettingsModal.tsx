@@ -13,6 +13,7 @@ import { useStore, exportData, importData, clearData, type SettingsTab } from '.
 import {
   createDefaultOpenAIProfile,
   NATIVE_IMAGE_PROVIDERS,
+  BUILT_IN_PROVIDER_IDS,
   DEFAULT_FAL_BASE_URL,
   DEFAULT_FAL_MODEL_LIST,
   DEFAULT_IMAGES_MODEL,
@@ -53,10 +54,10 @@ import { DEFAULT_AGENT_MAX_TOOL_ROUNDS, DEFAULT_STREAM_PARTIAL_IMAGES, REASONING
 import {
   CUSTOM_PROVIDER_LLM_PROMPT,
   DEFAULT_CUSTOM_PROVIDER_JSON,
+  serializeCustomProviderManifest,
 } from '../lib/settingsCustomProvider'
 import { useCloseOnEscape } from '../hooks/useCloseOnEscape'
 import { usePreventBackgroundScroll } from '../hooks/usePreventBackgroundScroll'
-import { updateModalScrollRef, useReleaseUpdates } from '../hooks/useReleaseUpdates'
 import { DEFAULT_DROPDOWN_MAX_HEIGHT, DROPDOWN_PANEL_CLASS, DROPDOWN_SCROLL_CLASS, getDropdownMaxHeight } from '../lib/dropdown'
 import {
   buildCustomProvider,
@@ -76,6 +77,7 @@ import ViewportTooltip from './ViewportTooltip'
 import { ChevronDownIcon, CloseIcon, CopyIcon, PlusIcon, TrashIcon, ExportIcon, ImportIcon, DragHandleIcon, LinkIcon, SparklesIcon } from './icons'
 import { TooltipButton } from './TooltipButton'
 import GeneralSettingsTab from './settings/GeneralSettingsTab'
+import ModelListModal from './settings/ModelListModal'
 import ModelIdInput from './settings/ModelIdInput'
 import AppearanceSettingsTab from './settings/AppearanceSettingsTab'
 import AgentSettingsTab from './settings/AgentSettingsTab'
@@ -190,9 +192,6 @@ export default function SettingsModal() {
   const profileImportUrlTooltipTimerRef = useRef<number | null>(null)
   const duplicateProfileTooltipTimerRef = useRef<number | null>(null)
   const settingsScrollBoundaryRef = useRef<HTMLDivElement>(null)
-  const customProviderScrollBoundaryRef = useRef<HTMLDivElement>(null)
-  const zipDownloadRouteScrollBoundaryRef = useRef<HTMLDivElement>(null)
-  const fontLicensesScrollBoundaryRef = useRef<HTMLDivElement>(null)
   const tabScrollRef = useRef<HTMLDivElement>(null)
   // 各选项卡共用一个滚动容器，按选项卡记录滚动位置，切换时各自恢复
   const tabScrollTopsRef = useRef<Partial<Record<SettingsTab, number>>>({})
@@ -205,6 +204,7 @@ export default function SettingsModal() {
   const [profileMenuMaxHeight, setProfileMenuMaxHeight] = useState(DEFAULT_DROPDOWN_MAX_HEIGHT)
   const [showCustomProviderImport, setShowCustomProviderImport] = useState(false)
   const [showZipDownloadRouteManager, setShowZipDownloadRouteManager] = useState(false)
+  const [modelListProfile, setModelListProfile] = useState<(ApiProfile & { modelList?: CustomProviderDefinition['modelList'] }) | null>(null)
   const [showFontLicenses, setShowFontLicenses] = useState(false)
   const [editingCustomProviderId, setEditingCustomProviderId] = useState<string | null>(null)
   const [customProviderJson, setCustomProviderJson] = useState(DEFAULT_CUSTOM_PROVIDER_JSON)
@@ -269,6 +269,18 @@ export default function SettingsModal() {
     : splitModelList(activeProfile.model).some(isGptImage26PlusModel))
   const apiProxyChecked = activeProfileApiProxyEligible && (apiProxyLocked || activeProfile.apiProxy)
   const apiProxyEnabled = apiProxyAvailable && activeProfileApiProxyEligible && apiProxyChecked
+  // 拉取期间若切换连接，关闭旧目录；单独编辑模型列表仍可在保存时追加。
+  if (modelListProfile && (
+    modelListProfile.id !== activeProfile.id ||
+    modelListProfile.provider !== activeProfile.provider ||
+    modelListProfile.baseUrl !== activeProfile.baseUrl ||
+    modelListProfile.apiKey !== activeProfile.apiKey ||
+    modelListProfile.apiMode !== activeProfile.apiMode ||
+    JSON.stringify(modelListProfile.modelList) !== JSON.stringify(activeCustomProvider?.modelList) ||
+    modelListProfile.apiProxy !== apiProxyEnabled
+  )) {
+    setModelListProfile(null)
+  }
   const defaultProviderOrder = ['openai', 'google', 'xai', 'bytedance', 'sb2api-async', 'fal', ...draft.customProviders.map(p => p.id)]
   const providerOrder = draft.providerOrder || defaultProviderOrder
 
@@ -344,6 +356,7 @@ export default function SettingsModal() {
 
   useEffect(() => {
     if (!showSettings) {
+      setModelListProfile(null)
       draftSourceRef.current = null
       tabScrollTopsRef.current = {}
       return
@@ -528,14 +541,6 @@ export default function SettingsModal() {
       showDataTransferBusyToast()
       return
     }
-    if (showZipDownloadRouteManager) {
-      setShowZipDownloadRouteManager(false)
-      return
-    }
-    if (showFontLicenses) {
-      setShowFontLicenses(false)
-      return
-    }
     const nextTimeout = Number(timeoutInput)
     const normalizedTimeout =
       timeoutInput.trim() === '' || Number.isNaN(nextTimeout)
@@ -614,6 +619,7 @@ export default function SettingsModal() {
     if (!dataTransferMode) return
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
     const preventKeyDown = (e: KeyboardEvent) => {
+      if (useStore.getState().confirmDialog) return
       e.preventDefault()
       e.stopImmediatePropagation()
       showDataTransferBusyToast()
@@ -636,9 +642,7 @@ export default function SettingsModal() {
   }
 
   useCloseOnEscape(showSettings && !dataTransferMode, handleClose)
-  // 从“关于”打开的更新弹窗叠在设置之上，需要放行它的滚动
-  const updateModalOpen = useReleaseUpdates((s) => s.modalOpen)
-  usePreventBackgroundScroll(showSettings, updateModalOpen ? updateModalScrollRef : showZipDownloadRouteManager ? zipDownloadRouteScrollBoundaryRef : showFontLicenses ? fontLicensesScrollBoundaryRef : showCustomProviderImport ? customProviderScrollBoundaryRef : settingsScrollBoundaryRef)
+  usePreventBackgroundScroll(showSettings, settingsScrollBoundaryRef)
 
   if (!showSettings) return null
 
@@ -937,13 +941,7 @@ export default function SettingsModal() {
   function openEditCustomProvider(provider: CustomProviderDefinition) {
     if (presetConfigOnly || isPresetProviderLocked(provider.id)) return
     setEditingCustomProviderId(provider.id)
-    setCustomProviderJson(JSON.stringify({
-      name: provider.name,
-      submit: provider.submit,
-      editSubmit: provider.editSubmit,
-      poll: provider.poll,
-      modelOverrides: provider.modelOverrides,
-    }, null, 2))
+    setCustomProviderJson(serializeCustomProviderManifest(provider))
     setShowCustomProviderImport(true)
     setCustomProviderImportError(null)
   }
@@ -1046,12 +1044,7 @@ export default function SettingsModal() {
       }
 
       const provider = imported.customProviders[0]
-      setCustomProviderJson(JSON.stringify({
-        name: provider.name,
-        submit: provider.submit,
-        editSubmit: provider.editSubmit,
-        poll: provider.poll,
-      }, null, 2))
+      setCustomProviderJson(serializeCustomProviderManifest(provider))
       setCustomProviderImportError(null)
       showToast('JSON 配置已导入', 'success')
     } catch (err) {
@@ -1075,7 +1068,7 @@ export default function SettingsModal() {
           onClickCapture={(e) => {
             blockDataTransferClick(e)
             if (e.defaultPrevented || !(e.target instanceof Element)) return
-            if (e.target.closest('input, textarea, select, button, a, [contenteditable="true"], [role="button"]')) return
+            if (e.target.closest('input, textarea, select, button, a, label[for], [contenteditable="true"], [role="button"]')) return
             const control = e.target.closest('label')?.control
             if (control instanceof HTMLTextAreaElement || (control instanceof HTMLInputElement && !['checkbox', 'radio'].includes(control.type))) {
               e.preventDefault()
@@ -1583,11 +1576,19 @@ export default function SettingsModal() {
               )}
 
               {/* 7. 模型 ID（紧跟接口选择） */}
-              <label className="block">
-                <span className="mb-1.5 block text-sm text-gray-600 dark:text-gray-300">
-                  {isResponsesProfile ? '文本模型 ID' : '模型 ID'}
-                </span>
+              <div className="block">
+                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <label htmlFor="settings-model-id">{isResponsesProfile ? '文本模型 ID' : '模型 ID'}</label>
+                  {(BUILT_IN_PROVIDER_IDS.has(activeProfile.provider) || activeCustomProvider?.modelList) && (
+                    <button type="button" disabled={activeProfileLocked} onClick={(event) => {
+                      event.currentTarget.focus()
+                      setModelListProfile({ ...activeProfile, apiProxy: apiProxyEnabled, modelList: activeCustomProvider?.modelList })
+                    }}
+                      className="text-xs text-blue-500 hover:text-blue-600 disabled:opacity-50">获取模型列表</button>
+                  )}
+                </div>
                 <ModelIdInput
+                  id="settings-model-id"
                   key={`${activeProfile.id}-model`}
                   aria-label={isResponsesProfile ? '文本模型 ID' : '模型 ID'}
                   value={activeProfile.model}
@@ -1616,7 +1617,7 @@ export default function SettingsModal() {
                     <>支持通过链接参数导入：<code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">?model=</code>。</>
                   )}
                 </div>
-              </label>
+              </div>
 
               {isResponsesProfile && (
                 <div className="block">
@@ -1984,10 +1985,21 @@ export default function SettingsModal() {
       </div>
       </div>
 
+        {modelListProfile && (
+          <ModelListModal
+            profile={modelListProfile}
+            mapping={modelListProfile.modelList}
+            onClose={() => setModelListProfile(null)}
+            onSave={(models) => {
+              commitActiveProfilePatch({ model: splitModelList([activeProfile.model, ...models].join(',')).join(', ') })
+              setModelListProfile(null)
+            }}
+          />
+        )}
+
         {showZipDownloadRouteManager && (
           <ZipDownloadRouteModal
             routes={draft.zipDownloadRoutes}
-            scrollBoundaryRef={zipDownloadRouteScrollBoundaryRef}
             onSetEnabled={setZipDownloadRouteEnabled}
             onClose={() => setShowZipDownloadRouteManager(false)}
           />
@@ -1995,7 +2007,6 @@ export default function SettingsModal() {
 
         {showFontLicenses && (
           <FontLicensesModal
-            scrollBoundaryRef={fontLicensesScrollBoundaryRef}
             onClose={() => setShowFontLicenses(false)}
           />
         )}
@@ -2006,7 +2017,6 @@ export default function SettingsModal() {
             json={customProviderJson}
             error={customProviderImportError}
             isImportingJson={isImportingJson}
-            scrollBoundaryRef={customProviderScrollBoundaryRef}
             onClose={closeCustomProviderModal}
             onCopyLlmPrompt={copyCustomProviderLlmPrompt}
             onImportJson={handleCustomProviderJsonPaste}
